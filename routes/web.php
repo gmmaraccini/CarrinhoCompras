@@ -49,6 +49,12 @@ Route::middleware('auth')->group(function () {
 
         return view('my_orders', compact('orders'));
     })->name('my_orders');
+
+    // Rotas de Retorno do Pagamento
+    Route::get('/pagamento/sucesso', [CartController::class, 'paymentSuccess'])->name('payment.success');
+    Route::get('/pagamento/cancel', [CartController::class, 'paymentCancel'])->name('payment.cancel');
+
+
 });
 
 require __DIR__.'/auth.php';

@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    protected $fillable = ['total_price', 'status'];
+    // ADICIONADO: 'user_id' na lista
+    protected $fillable = ['user_id', 'total_price', 'status'];
 
     // Um pedido tem muitos itens
     public function items()
