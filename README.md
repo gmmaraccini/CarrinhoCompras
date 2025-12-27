@@ -236,3 +236,7 @@ Ao colocar isso no GitHub, você mostra que:
 3.  Sabe resolver bugs comuns do framework (o caso do `$fillable`).
 
 ```
+
+
+Video - parte 2
+https://youtu.be/mbd6uu2dNOs
