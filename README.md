@@ -134,3 +134,105 @@ Desenvolvido por **Gabriel Maraccini** como projeto de estudo de arquitetura MVC
 Arquivo do youtube mostrando
 
 https://youtu.be/zyw5cSKzPaE
+
+
+PARTE 2
+
+Com certeza! Documentar as variáveis de ambiente (`.env`) é essencial para que outros desenvolvedores (ou você no futuro) saibam como configurar o projeto sem ter que adivinhar.
+
+Aqui está o texto completo, formatado para você copiar e colar no seu `README.md`. Eu incluí a parte técnica da integração e o exemplo do `.env`.
+
+---
+
+### Texto para o README.md
+
+```markdown
+## ⚙️ Configuração e Variáveis de Ambiente (.env)
+
+Para que a integração com o Stripe funcione, é necessário configurar as chaves de API no arquivo `.env`.
+
+**Passo a passo:**
+1. Crie uma conta no [Stripe Dashboard](https://dashboard.stripe.com/).
+2. Ative o "Test Mode" (Modo de Teste).
+3. Em "Developers" > "API Keys", copie suas chaves pública e secreta.
+4. Adicione as seguintes linhas ao seu arquivo `.env`:
+
+```env
+# Configurações do Stripe
+# PK = Publishable Key (Pública)
+# SK = Secret Key (Secreta)
+
+STRIPE_PK_KEY=pk_test_sua_chave_publica_aqui...
+STRIPE_SK_KEY=sk_test_sua_chave_secreta_aqui...
+
+```
+
+> **Nota de Segurança:** O arquivo `.env` nunca é enviado para o GitHub (está no `.gitignore`) para proteger suas credenciais. O exemplo acima serve apenas como referência das variáveis necessárias.
+
+---
+
+## 💻 Detalhes da Implementação Técnica (Parte 2)
+
+Nesta etapa, elevamos o nível do projeto integrando um Gateway de Pagamento real. Abaixo, os detalhes da arquitetura utilizada:
+
+### 1. Biblioteca Oficial (SDK)
+
+Utilizamos o pacote oficial `stripe/stripe-php` via Composer. Isso garante que estamos seguindo as melhores práticas de segurança recomendadas pela documentação da API.
+
+### 2. Fluxo de Checkout (Hosted Session)
+
+Optamos pelo modelo de **Checkout Session**. Ao invés de manipular dados sensíveis de cartão de crédito diretamente no nosso servidor (o que exigiria conformidade PCI-DSS complexa), nós:
+
+1. Criamos um pedido com status `pendente` no banco de dados.
+2. Enviamos os itens do carrinho para a API do Stripe.
+3. Redirecionamos o usuário para uma página segura hospedada pelo Stripe.
+4. Aguardamos o retorno do usuário para confirmar a transação.
+
+### 3. Validação Robusta
+
+Para evitar fraudes (ex: usuário acessar a URL de sucesso sem pagar), implementamos uma verificação dupla no Controller:
+
+```php
+// Recuperamos a sessão direto da API do Stripe para confirmar o status real
+$session = Session::retrieve($sessionId);
+
+if ($session->payment_status === 'paid') {
+    // Só agora liberamos o pedido no banco
+}
+
+```
+
+### 4. Correção de Mass Assignment (Bug Fix)
+
+Um desafio técnico encontrado foi a persistência do `user_id`. O Laravel protege o banco de dados contra inserção em massa.
+
+* **O Erro:** Pedidos eram salvos, mas ficavam sem "dono" (user_id = null).
+* **A Solução:** Foi necessário atualizar a propriedade `$fillable` no Model `Order.php`:
+```php
+protected $fillable = ['user_id', 'total_price', 'status'];
+
+```
+
+
+
+---
+
+## 🧪 Como Testar
+
+Para simular pagamentos, utilize os dados de teste fornecidos pelo Stripe:
+
+* **Número do Cartão:** `4242 4242 4242 4242`
+* **Validade:** Qualquer data futura (ex: 12/30)
+* **CVC:** Qualquer número (ex: 123)
+
+```
+
+---
+
+### Dica Profissional para o Portfólio:
+Ao colocar isso no GitHub, você mostra que:
+1.  Sabe proteger dados (não subiu as chaves reais).
+2.  Sabe explicar a arquitetura (Backend -> API -> Database).
+3.  Sabe resolver bugs comuns do framework (o caso do `$fillable`).
+
+```
